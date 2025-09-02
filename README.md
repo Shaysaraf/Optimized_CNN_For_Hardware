@@ -1,9 +1,9 @@
 # Tiny-ImageNet 64x64 Wide ResNet-34 + POT-QAT (Teacher–Student KD)
 This repository provides a full training and quantization pipeline for deploying **Wide ResNet-34** on **Tiny-ImageNet (64×64)** with **Powers-of-Two Quantization (POT-QAT)** and **Knowledge Distillation (KD)**.
 
-![DL_PROJ_CNN](https://github.com/user-attachments/assets/15296a73-4b73-476b-856c-b455aa1bd6a3)
+![DL_PROJ_CNN](https://github.com/user-attachments/assets/15296a73-4b73-476b-856c-b455aa1bd6a3)  ![DL_CNN_MODEL_DIAG](https://github.com/user-attachments/assets/cee973ed-8288-46ed-9d4e-fc2279cffed6)
 
-![DL_CNN_MODEL_DIAG](https://github.com/user-attachments/assets/cee973ed-8288-46ed-9d4e-fc2279cffed6)
+
 
 
 

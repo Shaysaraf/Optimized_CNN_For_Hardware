@@ -423,7 +423,7 @@ if SAVE_FP and SAVE_POT:
   plt.show()
 
 # -----------------------------
-# Random 20-image test using POT student
+# Random 20-image test using POT student (new images each run)
 # -----------------------------
 if TEST:
     print("\n=== Random 20-Image Test (POT Student) ===")
@@ -442,7 +442,7 @@ if TEST:
     pot_student.hard_apply()
     pot_student.eval()
     
-    # Randomly select 20 validation samples
+    # Randomly select 20 validation samples (new each run)
     val_indices = np.random.choice(len(ds["valid"]), 20, replace=False)
     imgs_list, labels_list = [], []
     for idx in val_indices:
@@ -472,9 +472,10 @@ if TEST:
         plt.subplot(4,5,i+1)
         plt.imshow(img_np)
         plt.axis('off')
-        plt.title(f"P:{preds[i].item()} / T:{labels_list[i]}")
+        plt.title(f"Predict:{preds[i].item()} / True:{labels_list[i]}")
     plt.tight_layout()
     plt.show()
+
 
 
 

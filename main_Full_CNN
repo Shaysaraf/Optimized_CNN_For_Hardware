@@ -23,8 +23,8 @@ import matplotlib.pyplot as plt
 # Flags
 # -----------------------------
 TRAIN_FP = False         # Phase 1: Train full-precision teacher
-TRAIN_POT = True        # Phase 2: POT QAT (student) with KD
-TEST = False            # Run a small test at the end
+TRAIN_POT = False        # Phase 2: POT QAT (student) with KD
+TEST = True            # Run a small test at the end
 SAVE_FP = False          # Save FP teacher checkpoint
 SAVE_POT = False         # Save final POT student checkpoint
 EXPORT_POT = False       # Export weights to .npz/.txt
@@ -421,6 +421,60 @@ if SAVE_FP and SAVE_POT:
   plt.legend()
   plt.grid(True)
   plt.show()
+
+# -----------------------------
+# Random 20-image test using POT student
+# -----------------------------
+if TEST:
+    print("\n=== Random 20-Image Test (POT Student) ===")
+    
+    # Load the student model
+    student_model = WideResNet34().to(DEVICE)
+    if CKPT_FINAL_POT.exists():
+        student_model.load_state_dict(torch.load(CKPT_FINAL_POT, map_location=DEVICE))
+        print(f"Loaded POT student checkpoint from {CKPT_FINAL_POT}")
+    else:
+        raise FileNotFoundError(f"{CKPT_FINAL_POT} not found!")
+
+    # Apply POT quantization
+    pot_student = POTProjector(student_model, kmin=POT_MIN_EXP, kmax=POT_MAX_EXP)
+    pot_student.to(DEVICE)
+    pot_student.hard_apply()
+    pot_student.eval()
+    
+    # Randomly select 20 validation samples
+    val_indices = np.random.choice(len(ds["valid"]), 20, replace=False)
+    imgs_list, labels_list = [], []
+    for idx in val_indices:
+        item = ds["valid"][int(idx)]
+        img = item["image"].convert("RGB")
+        img = transform_val(img)
+        imgs_list.append(img)
+        labels_list.append(item["label"])
+    
+    imgs_tensor = torch.stack(imgs_list).to(DEVICE)
+    labels_tensor = torch.tensor(labels_list, dtype=torch.long).to(DEVICE)
+    
+    # Run inference
+    with torch.no_grad():
+        outputs = pot_student(imgs_tensor)
+        preds = outputs.argmax(1)
+    
+    correct = (preds == labels_tensor).sum().item()
+    acc = 100.0 * correct / len(labels_tensor)
+    print(f"Random 20-image test accuracy: {acc:.2f}%")
+    
+    # Optional: show images with predictions
+    plt.figure(figsize=(12,6))
+    for i in range(len(imgs_list)):
+        img_np = imgs_list[i].permute(1,2,0).cpu().numpy()
+        img_np = np.clip(img_np * np.array([0.229,0.224,0.225]) + np.array([0.485,0.456,0.406]), 0, 1)
+        plt.subplot(4,5,i+1)
+        plt.imshow(img_np)
+        plt.axis('off')
+        plt.title(f"P:{preds[i].item()} / T:{labels_list[i]}")
+    plt.tight_layout()
+    plt.show()
 
 
 

@@ -1,5 +1,5 @@
 # Tiny-ImageNet 64x64 Wide ResNet-34 + POT-QAT (Entropy only, export)
-# Fixed: saving quantized copy instead of modifying/reloading the training student
+
 
 import os
 import random

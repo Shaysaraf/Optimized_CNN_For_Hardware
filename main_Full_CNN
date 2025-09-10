@@ -22,12 +22,12 @@ import matplotlib.pyplot as plt
 # -----------------------------
 # Flags
 # -----------------------------
-TRAIN_FP = False         # Phase 1: Train full-precision teacher
-TRAIN_POT = False        # Phase 2: POT QAT (student) with KD
+TRAIN_FP = True         # Phase 1: Train full-precision teacher
+TRAIN_POT = True        # Phase 2: POT QAT (student) with KD
 TEST = True           # Run a small test at the end
-SAVE_FP = False          # Save FP teacher checkpoint
-SAVE_POT = False         # Save final POT student checkpoint
-EXPORT_POT = False       # Export weights to .npz/.txt
+SAVE_FP = True          # Save FP teacher checkpoint
+SAVE_POT = True         # Save final POT student checkpoint
+EXPORT_POT = True       # Export weights to .npz/.txt
 
 # -----------------------------
 # Config
@@ -38,11 +38,11 @@ NUM_CLASSES = 200
 BATCH_SIZE = 64
 NUM_WORKERS = 4 if DEVICE.type == "cuda" else 0
 PIN_MEMORY = DEVICE.type == "cuda"
-EPOCHS_FP = 300
-EPOCHS_POT =200
+EPOCHS_FP = 60
+EPOCHS_POT =150
 LR_FP = 0.01
-LR_POT = 3e-4
-WEIGHT_DECAY = 5e-4
+LR_POT = 3e-5
+WEIGHT_DECAY = 7e-4
 MIXUP_ALPHA = 0.2
 
 # Quantization: powers of 2
@@ -277,7 +277,7 @@ train_losses_pot, train_accs_pot, val_accs_pot = [], [], []
 if TRAIN_POT:
     print("\n=== Phase 2: POT QAT + Knowledge Distillation ===")
     teacher = WideResNet34().to(DEVICE)
-    if SAVE_FP and CKPT_BEST_FP.exists():
+    if CKPT_BEST_FP.exists():
         teacher.load_state_dict(torch.load(CKPT_BEST_FP, map_location=DEVICE))
     else:
         teacher.load_state_dict(model.state_dict())
@@ -290,7 +290,7 @@ if TRAIN_POT:
     sched = optim.lr_scheduler.CosineAnnealingLR(optimizer_pot, T_max=EPOCHS_POT)
 
     tau = 2.0
-    alpha_kd = 0.4
+    alpha_kd = 0.6
     ce = nn.CrossEntropyLoss()
     def kd_loss_fn(s_logits, t_logits, y, tau, alpha):
         ce_loss = ce(s_logits, y)
@@ -394,7 +394,7 @@ if TRAIN_POT:
 if SAVE_FP and SAVE_POT:
   plt.figure(figsize=(8,5))
   plt.plot(range(1, EPOCHS_FP+1), train_losses_fp, label='FP Train Loss')
-  plt.plot(range(1, EPOCHS_POT+1), train_losses_pot, label='POT+KD Train Loss')
+  plt.plot(range(EPOCHS_FP + 1, EPOCHS_FP + EPOCHS_POT+1), train_losses_pot, label='POT+KD Train Loss')
   plt.xlabel('Epoch')
   plt.ylabel('Loss')
   plt.title('Training Loss Curve')
